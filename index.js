@@ -7,6 +7,7 @@ const fnMap = {
 	login: '/login',
 	logout: '/logout',
 	getSpeakers: '/ctrl-int/1/getspeakers',
+	setSpeakers: '/ctrl-int/1/setspeakers',
 	nowPlayingArtwork: '/ctrl-int/1/nowplayingartwork',
 	prevItem: '/ctrl-int/1/previtem',
 	nextItem: '/ctrl-int/1/nextitem'
@@ -24,11 +25,13 @@ class DAAP {
 		if(noLogin.includes(path) || query['session-id']) {
 			const headers = {};
 
-			if (path === fnMap.login && this.guid) {
-				query['pairing-guid'] = this.guid;
+			if (path === fnMap.login && this.guId) {
+				query['pairing-guid'] = this.guId;
 			}
 			if (this.remoteId) {
 				headers['Active-Remote'] = this.remoteId;
+			} else {
+				headers['Viewer-Only-Client'] = 1;
 			}
 
 			return this._requestFromCache(path, query, headers);
