@@ -21,7 +21,7 @@ class DAAP {
 		this.remoteId = options.remoteId;
 		this.guId = options.guId;
 	}
-	request(path, query = {}) {
+	request(path, query = {}, retry = true) {
 		if(noLogin.includes(path) || query['session-id']) {
 			const headers = {};
 
@@ -34,7 +34,13 @@ class DAAP {
 				headers['Viewer-Only-Client'] = 1;
 			}
 
-			return this._requestFromCache(path, query, headers);
+			return this._requestFromCache(path, query, headers).catch((e) => {
+				if (retry && query['session-id']) {
+					delete query['session-id'];
+					return this.request(path, query, false);
+				}
+				throw e;
+			});
 		}
 
 		if (path === fnMap.logout && (!this._pending[fnMap.login] || !Object.keys(this._pending[fnMap.login]).length)) {
@@ -42,7 +48,7 @@ class DAAP {
 		}
 		return this.login().then(([mlog]) => {
 			query['session-id'] = mlog.mlid;
-			return this.request(path, query);
+			return this.request(path, query, retry);
 		});
 	}
 	_requestFromCache(path, query, headers) {
@@ -75,6 +81,10 @@ class DAAP {
 				return res;
 			})
 			.catch(res => {
+				const [{ mstt }] = res;
+				if (mstt === 401 || mstt === 403) {
+					delete this._pending[fnMap.login];
+				}
 				delete this._pending[path][queryHash];
 				throw res;
 			});
