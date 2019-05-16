@@ -25,6 +25,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "daap-request": "0.0.2"
+    "daap-request": "0.0.3"
   }
 }
